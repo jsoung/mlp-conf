@@ -1,2 +1,0 @@
-[console_scripts]
-mlp-conf-list-params = mlp_conf.cli:main
