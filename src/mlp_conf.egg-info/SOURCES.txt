@@ -1,0 +1,15 @@
+LICENSE
+MANIFEST.in
+README.md
+VERSION.txt
+pyproject.toml
+src/mlp_conf/__init__.py
+src/mlp_conf/argparse.py
+src/mlp_conf/cli.py
+src/mlp_conf/config.py
+src/mlp_conf.egg-info/PKG-INFO
+src/mlp_conf.egg-info/SOURCES.txt
+src/mlp_conf.egg-info/dependency_links.txt
+src/mlp_conf.egg-info/entry_points.txt
+src/mlp_conf.egg-info/requires.txt
+src/mlp_conf.egg-info/top_level.txt
