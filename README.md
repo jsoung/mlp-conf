@@ -21,43 +21,65 @@ The package provides two main classes:
 - `MlpArgumentParser`: Extends [argparse](https://docs.python.org/3/library/argparse.html).
 - `MlpConfig`: Parses configuration files into accessible namespaces.
 
+## Variable Interpolation
+
+This package supports three types of variable interpolation in your config files:
+
+1. **Default variables**:  
+   Defined in the `[DEFAULT]` section (or at the top of the config file, without a section header).  
+   Referenced as `{var}` in any section.
+
+2. **Section/Key interpolation**:  
+   Using `${section:key}` syntax, values from other sections can be referenced (requires `ExtendedInterpolation`).
+
+3. **Environment/system variables**:  
+   Special placeholders in the form `{{USER}}`, `{{DATE}}`, `{{GIT_BRANCH}}`, `{{CWD}}` can be used in any config value.  
+   These are automatically substituted at load time.
+
 ### Example Usage
 
-Given a configuration file:
-
 ```ini
+[DEFAULT]
+user = alice
+suffix = _prod
+
+[project]
+name = example_project
+
 [preprocess]
-input = my_input_data_path/my_input_date_file
+output_dir = ${project:name}/build/output/{user}/{{USER}}
 ```
 
-The script will initialize `MlpConfig` like this:
+When you load your config with `MlpConfig`, the variables are resolved as follows:
+- `{user}` and `{suffix}` are replaced with values from `[DEFAULT]`.
+- `${project:name}` is replaced with the value from `[project]`.
+- `{{USER}}` is replaced with the current user.
+
+### How it works
+
+You do **not** need to call any substitution functions yourself.  
+Just use `MlpConfig`:
 
 ```python
-conf = MlpConfig()
+from mlp_conf.config import MlpConfig
+
+cfg = MlpConfig("project.cfg")
+print(cfg.preprocess.output_dir)  # e.g. example_project/build/output/alice/jerry
 ```
 
-Configurations are parsed into the `MlpConfig` instance as namespaces and can be accessed like this:
+### Supported Environment/System Placeholders
 
-```python
-input = conf.preprocess.input
-```
+- `{{USER}}` — current user name
+- `{{DATE}}` — current date in `yyyymmdd` format (always a string)
+- `{{GIT_BRANCH}}` — current git branch (if in a git repo)
+- `{{CWD}}` — current working directory
 
-An implicit command line argument equivalent to the following is added to `MlpArgumentParser`:
+### Notes
 
-```python
-parser = MlpArgumentParserr(conf)
-parser.add_argument('--input', default=conf.preprocess.input)
-```
+- You can override any config value via an override file or environment variable (see tests for details).
+- The `[env]` section is **not** special; use `[DEFAULT]` for global variables.
+- `${section:key}` interpolation is supported via `ExtendedInterpolation`.
 
-When running the preprocess script, all parameters can be overridden with command line arguments. The script will get the value as:
+### Testing
 
-```python
-input = args.input
-```
-
-Since the INI file format does not support typing, `MlpArgumentParser` performs basic type conversions, such as the following:
-
-- string: this is the default
-- int: for example, 12345
-- float: for example, 1.0
-- bool: 'yes'/'no', 'on'/'off', 'true'/'false', and '1'/'0'
+See `tests/mlp_conf/test_config.py` for comprehensive test cases covering all features.

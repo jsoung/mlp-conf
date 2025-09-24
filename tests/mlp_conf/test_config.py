@@ -49,3 +49,73 @@ def test_override_unknown_key(tmp_path):
     write_cfg(override_path, "[section]\nunknown = value\n")
     with pytest.raises(ValueError):
         MlpConfig(str(cfg_path), str(override_path))
+
+def test_default_section_variable_interpolation(tmp_path):
+    cfg_path = tmp_path / "project.cfg"
+    write_cfg(cfg_path, """
+[DEFAULT]
+user = alice
+suffix = _prod
+
+[section]
+output = dataset_{user}{suffix}
+""")
+    conf = MlpConfig(str(cfg_path))
+    assert conf.section.output == "dataset_alice_prod"
+
+def test_envvar_interpolation(monkeypatch, tmp_path):
+    cfg_path = tmp_path / "project.cfg"
+    write_cfg(cfg_path, """
+[section]
+output = dataset_{{USER}}
+date = {{DATE}}
+cwd = {{CWD}}
+branch = {{GIT_BRANCH}}
+""")
+    monkeypatch.setenv("USER", "testuser")
+    conf = MlpConfig(str(cfg_path))
+    assert conf.section.output.startswith("dataset_testuser")
+    assert isinstance(conf.section.date, str) and conf.section.date.isdigit() and len(conf.section.date) == 8
+    assert os.path.isabs(conf.section.cwd)
+    assert isinstance(conf.section.branch, str)
+
+def test_extended_interpolation(tmp_path, monkeypatch):
+    cfg_path = tmp_path / "project.cfg"
+    write_cfg(cfg_path, """
+[project]
+name = example_project
+
+[preprocess]
+output_dir = ${project:name}/build/output/{{USER}}
+""")
+    monkeypatch.setenv("USER", "jerry")
+    conf = MlpConfig(str(cfg_path))
+    assert conf.preprocess.output_dir == "example_project/build/output/jerry"
+
+def test_default_and_envvar_combined(tmp_path, monkeypatch):
+    cfg_path = tmp_path / "project.cfg"
+    write_cfg(cfg_path, """
+[DEFAULT]
+prefix = foo
+
+[section]
+output = {prefix}_{{USER}}
+""")
+    monkeypatch.setenv("USER", "bob")
+    conf = MlpConfig(str(cfg_path))
+    assert conf.section.output == "foo_bob"
+
+def test_list_params(tmp_path):
+    cfg_path = tmp_path / "project.cfg"
+    write_cfg(cfg_path, """
+[DEFAULT]
+foo = bar
+
+[section]
+num = 1
+val = {foo}
+""")
+    conf = MlpConfig(str(cfg_path))
+    params = conf.list_params()
+    assert ("section", "num", 1, "default") in params
+    assert ("section", "val", "bar", "default") in params

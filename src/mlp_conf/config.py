@@ -1,5 +1,6 @@
 import configparser
 import os
+from .envvar import envsubst
 
 class Namespace:
     def __init__(self, name):
@@ -20,10 +21,12 @@ class MlpConfig:
         self._load_config()
 
     def _load_config(self):
-        parser = configparser.ConfigParser()
+        parser = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
         parser.optionxform = str
         parser.read(self._cfg_path)
         base = {}
+        # Collect DEFAULT section for variable interpolation
+        defaults = dict(parser.defaults())
         for section in parser.sections():
             base[section] = dict(parser.items(section))
         override = {}
@@ -57,24 +60,28 @@ class MlpConfig:
                 if section in env_overrides and k in env_overrides[section]:
                     val = env_overrides[section][k]
                     src = "env"
-                val = self._infer_type(val)
+                # Interpolate with DEFAULT section variables first
+                if isinstance(val, str):
+                    for dkey, dval in defaults.items():
+                        val = val.replace(f"{{{dkey}}}", dval)
+                    val = envsubst(val)
+                # --- Only infer type if key is not 'date' ---
+                if isinstance(val, str) and k.lower() != "date":
+                    val = self._infer_type(val)
                 setattr(ns, k, val)
                 self._sources[f"{section}.{k}"] = src
             setattr(self, section, ns)
             self._namespaces[section] = ns
 
     def _infer_type(self, val):
-        # Try int
         try:
             return int(val)
         except ValueError:
             pass
-        # Try float
         try:
             return float(val)
         except ValueError:
             pass
-        # Try bool
         if isinstance(val, str):
             v = val.strip().lower()
             if v in ("yes", "true", "on", "1"):
