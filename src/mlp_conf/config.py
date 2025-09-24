@@ -1,26 +1,49 @@
 import configparser
 import os
 from .envvar import envsubst
+from typing import Any, Dict
 
 class Namespace:
-    def __init__(self, name):
+    """Namespace for configuration section attributes."""
+
+    def __init__(self, name: str):
+        """Initializes a Namespace.
+
+        Args:
+            name: The name of the section.
+        """
         self._name = name
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key: str, value: Any) -> None:
+        """Sets an attribute on the namespace.
+
+        Args:
+            key: Attribute name.
+            value: Attribute value.
+        """
         if key.startswith('_'):
             super().__setattr__(key, value)
         else:
             self.__dict__[key] = value
 
 class MlpConfig:
-    def __init__(self, cfg_path="project.cfg", override_path="project.override.cfg"):
-        self._sources = {}
-        self._namespaces = {}
+    """Configuration loader and accessor for INI-style config files."""
+
+    def __init__(self, cfg_path: str = "project.cfg", override_path: str = "project.override.cfg"):
+        """Initializes the MlpConfig.
+
+        Args:
+            cfg_path: Path to the main config file.
+            override_path: Path to the override config file.
+        """
+        self._sources: Dict[str, str] = {}
+        self._namespaces: Dict[str, Namespace] = {}
         self._cfg_path = cfg_path
         self._override_path = override_path
         self._load_config()
 
-    def _load_config(self):
+    def _load_config(self) -> None:
+        """Loads and processes the configuration files."""
         parser = configparser.ConfigParser(interpolation=configparser.ExtendedInterpolation())
         parser.optionxform = str
         parser.read(self._cfg_path)
@@ -65,7 +88,7 @@ class MlpConfig:
                     for dkey, dval in defaults.items():
                         val = val.replace(f"{{{dkey}}}", dval)
                     val = envsubst(val)
-                # --- Only infer type if key is not 'date' ---
+                # Always treat 'date' as string
                 if isinstance(val, str) and k.lower() != "date":
                     val = self._infer_type(val)
                 setattr(ns, k, val)
@@ -73,7 +96,15 @@ class MlpConfig:
             setattr(self, section, ns)
             self._namespaces[section] = ns
 
-    def _infer_type(self, val):
+    def _infer_type(self, val: str) -> Any:
+        """Infer the type of a string value.
+
+        Args:
+            val: The value to infer.
+
+        Returns:
+            The value converted to int, float, bool, or left as string.
+        """
         try:
             return int(val)
         except ValueError:
@@ -90,7 +121,12 @@ class MlpConfig:
                 return False
         return val
 
-    def list_params(self):
+    def list_params(self) -> list:
+        """List all parameters in the configuration.
+
+        Returns:
+            list: A list of tuples (section, key, value, source).
+        """
         params = []
         for section, ns in self._namespaces.items():
             for k in ns.__dict__:
