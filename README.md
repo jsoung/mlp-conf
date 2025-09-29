@@ -25,15 +25,15 @@ The package provides two main classes:
 
 This package supports three types of variable interpolation in your config files:
 
-1. **Default variables**:  
-   Defined in the `[DEFAULT]` section (or at the top of the config file, without a section header).  
+1. **Default variables**:
+   Defined in the `[DEFAULT]` section (or at the top of the config file, without a section header).
    Referenced as `{var}` in any section.
 
-2. **Section/Key interpolation**:  
+2. **Section/Key interpolation**:
    Using `${section:key}` syntax, values from other sections can be referenced (requires `ExtendedInterpolation`).
 
-3. **Environment/system variables**:  
-   Special placeholders in the form `{{USER}}`, `{{DATE}}`, `{{GIT_BRANCH}}`, `{{CWD}}` can be used in any config value.  
+3. **Environment/system variables**:
+   Special placeholders in the form `{{USER}}`, `{{DATE}}`, `{{GIT_BRANCH}}`, `{{CWD}}` can be used in any config value.
    These are automatically substituted at load time.
 
 ### Example Usage
@@ -57,7 +57,7 @@ When you load your config with `MlpConfig`, the variables are resolved as follow
 
 ### How it works
 
-You do **not** need to call any substitution functions yourself.  
+You do **not** need to call any substitution functions yourself.
 Just use `MlpConfig`:
 
 ```python
@@ -83,3 +83,22 @@ print(cfg.preprocess.output_dir)  # e.g. example_project/build/output/alice/jerr
 ### Testing
 
 See `tests/mlp_conf/test_config.py` for comprehensive test cases covering all features.
+
+## Installation
+
+You can install the `mlp-conf` package directly from this GitHub repository using pip.
+
+### Latest (main branch)
+
+```sh
+pip install git+https://github.com/jsoung/mlp-conf.git
+```
+
+### Specific Release Version (e.g. v1.0.0)
+
+```sh
+pip install git+https://github.com/jsoung/mlp-conf.git@v1.0.0
+```
+
+This will install the code from the specified release tag.
+Make sure your environment uses Python 3.10 or newer.
