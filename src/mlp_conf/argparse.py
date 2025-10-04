@@ -1,6 +1,6 @@
 import argparse
 from typing import Any
-
+from mlp_conf.config import MlpConfig
 
 def str2bool(v: Any) -> bool:
     """Convert a string or boolean value to a boolean.
@@ -36,7 +36,7 @@ class MlpArgumentParser(argparse.ArgumentParser):
             **kwargs: Additional keyword arguments for ArgumentParser.
         """
         super().__init__(*args, **kwargs)
-        self.conf = conf
+        self.conf = MlpConfig() if conf is None else conf
         self._add_config_args()
 
     def _add_config_args(self) -> None:
@@ -46,9 +46,11 @@ class MlpArgumentParser(argparse.ArgumentParser):
                 if k.startswith("_"):
                     continue
                 val = getattr(ns, k)
+                # Replace dots with underscores in argument names
+                arg_name = f"--{section}_{k.replace('.', '_')}"
                 if isinstance(val, bool):
                     self.add_argument(
-                        f"--{k}",
+                        arg_name,
                         default=val,
                         type=str2bool,
                         help=f"({section}) default={val}",
@@ -56,7 +58,7 @@ class MlpArgumentParser(argparse.ArgumentParser):
                 else:
                     arg_type = type(val) if type(val) in (int, float) else str
                     self.add_argument(
-                        f"--{k}",
+                        arg_name,
                         default=val,
                         type=arg_type,
                         help=f"({section}) default={val}",

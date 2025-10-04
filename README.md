@@ -102,3 +102,26 @@ pip install git+https://github.com/jsoung/mlp-conf.git@v1.0.0
 
 This will install the code from the specified release tag.
 Make sure your environment uses Python 3.10 or newer.
+
+### Usage
+
+To run the sample pipeline, execute the following command:
+
+```bash
+python -m prefect_gcp.pipelines.sample_pipeline
+```
+
+# Mlp-Conf
+
+`Mlp-Conf` is a Python library for managing configuration files and command-line arguments. It supports hierarchical configuration using INI files and integrates seamlessly with `argparse`.
+
+## Features
+- Automatically maps INI file sections and keys to command-line arguments.
+- Supports type inference for integers, floats, and booleans.
+- Handles keys with dots (`.`) in INI files by replacing them with underscores (`_`) for compatibility with `argparse`.
+
+## Installation
+Install the library using `pip`:
+```bash
+pip install mlp-conf
+```
