@@ -1,6 +1,8 @@
 import argparse
 from typing import Any
+
 from mlp_conf.config import MlpConfig
+
 
 def str2bool(v: Any) -> bool:
     """Convert a string or boolean value to a boolean.
@@ -27,11 +29,11 @@ def str2bool(v: Any) -> bool:
 class MlpArgumentParser(argparse.ArgumentParser):
     """Argument parser that auto-adds arguments from an MlpConfig instance."""
 
-    def __init__(self, conf: Any, *args, **kwargs):
+    def __init__(self, conf: Any = None, *args, **kwargs):
         """Initializes the MlpArgumentParser.
 
         Args:
-            conf: An MlpConfig instance containing configuration namespaces.
+            conf: An MlpConfig instance containing configuration namespaces. If None, a default MlpConfig will be used.
             *args: Additional positional arguments for ArgumentParser.
             **kwargs: Additional keyword arguments for ArgumentParser.
         """
